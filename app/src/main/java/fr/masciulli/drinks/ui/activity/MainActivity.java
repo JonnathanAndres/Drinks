@@ -11,10 +11,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
+
+import java.util.List;
+import java.util.Random;
 
 import fr.masciulli.drinks.R;
+import fr.masciulli.drinks.model.Drink;
+import fr.masciulli.drinks.net.DataProvider;
 import fr.masciulli.drinks.ui.fragment.DrinksFragment;
 import fr.masciulli.drinks.ui.fragment.LiquorsFragment;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static final int POSITION_DRINKS = 0;
@@ -28,6 +38,13 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         ViewPager pager = (ViewPager) findViewById(R.id.pager);
+        ImageButton randomButton = (ImageButton) findViewById(R.id.random);
+        randomButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openRandomDrink();
+            }
+        });
 
         setSupportActionBar(toolbar);
         pager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
@@ -93,6 +110,27 @@ public class MainActivity extends AppCompatActivity {
 
     private void openAbout() {
         startActivity(new Intent(this, AboutActivity.class));
+    }
+
+    private void openRandomDrink() {
+        new DataProvider(this).getDrinks().enqueue(new Callback<List<Drink>>() {
+            @Override
+            public void onResponse(Call<List<Drink>> call, Response<List<Drink>> response) {
+                onDrinksRetrieved(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<List<Drink>> call, Throwable t) {
+                //TODO handle
+            }
+        });
+    }
+
+    private void onDrinksRetrieved(List<Drink> drinks) {
+        Drink drink = drinks.get(new Random().nextInt(drinks.size()));
+        Intent intent = new Intent(this, DrinkActivity.class);
+        intent.putExtra(DrinkActivity.EXTRA_DRINK, drink);
+        startActivity(intent);
     }
 
 
