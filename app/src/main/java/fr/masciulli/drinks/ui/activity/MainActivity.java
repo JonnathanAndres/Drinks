@@ -29,6 +29,7 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private static final int POSITION_DRINKS = 0;
     private static final int POSITION_LIQUORS = 1;
+    private List<Drink> drinks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
                 openRandomDrink();
             }
         });
+
+        loadDrinks();
 
         setSupportActionBar(toolbar);
         pager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
@@ -81,6 +84,20 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(pager);
     }
 
+    private void loadDrinks() {
+        new DataProvider(this).getDrinks().enqueue(new Callback<List<Drink>>() {
+            @Override
+            public void onResponse(Call<List<Drink>> call, Response<List<Drink>> response) {
+                drinks = response.body();
+            }
+
+            @Override
+            public void onFailure(Call<List<Drink>> call, Throwable t) {
+                //TODO handle
+            }
+        });
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -113,20 +130,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openRandomDrink() {
-        new DataProvider(this).getDrinks().enqueue(new Callback<List<Drink>>() {
-            @Override
-            public void onResponse(Call<List<Drink>> call, Response<List<Drink>> response) {
-                onDrinksRetrieved(response.body());
-            }
-
-            @Override
-            public void onFailure(Call<List<Drink>> call, Throwable t) {
-                //TODO handle
-            }
-        });
-    }
-
-    private void onDrinksRetrieved(List<Drink> drinks) {
         Drink drink = drinks.get(new Random().nextInt(drinks.size()));
         Intent intent = new Intent(this, DrinkActivity.class);
         intent.putExtra(DrinkActivity.EXTRA_DRINK, drink);
